@@ -1,44 +1,53 @@
 package top.yudoge.db;
 
-import top.yudoge.db.constants.Constants;
-import top.yudoge.db.interfaces.Column;
+import top.yudoge.db.interfaces.Table;
 import top.yudoge.db.structures.Row;
-import top.yudoge.db.structures.Table;
 import top.yudoge.db.types.INT;
 import top.yudoge.db.types.TINYINT;
 import top.yudoge.db.types.VARCHAR;
 
-import java.io.*;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Random;
 
 public class Test {
     static Row createRow(int id, String name, int age, String address) {
          return new Row(Arrays.asList(
                 new INT().setColumnName("id").setValue(id),
-                new VARCHAR(10).setColumnName("name").setValue(name),
+                new VARCHAR(20).setColumnName("name").setValue(name),
                 new TINYINT().setColumnName("age").setValue((byte) age),
                 new VARCHAR(255).setColumnName("address").setValue(address)
         ));
     }
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         Row rowSchema = new Row(Arrays.asList(
                 new INT().setColumnName("id"),
-                new VARCHAR(10).setColumnName("name"),
+                new VARCHAR(20).setColumnName("name"),
                 new TINYINT().setColumnName("age"),
                 new VARCHAR(255).setColumnName("address")
         ));
 
-        Table table = Table.createNewTable("user-"+new Date().getTime(), rowSchema);
-        table.addRow(createRow(1, "于小狗", 20, "辽宁工程技术大学北校区5舍"));
-        table.addRow(createRow(2, "李弯钩", 10, "辽宁工程技术大学北校区1舍"));
-        table.addRow(createRow(3, "张亏内", 80, "辽宁工程技术大学北校区3舍"));
+        DogeDB db = new DogeDB();
+        Table table = db.createNewTable("user3", rowSchema);
 
-        // 获取年龄大于10的行
-        table.getRows(row -> biggerThan(row.getColumn("age").getValue(), (byte) 10))
-                .forEach(System.out::println);
+        System.out.println("开始写入1000w条数据");
+        long writeStartTime = new Date().getTime();
+        for(int i=0;i < 10000000; i++) {
+            table.addRow(createRow(i, "于小狗"+i, new Random().nextInt(100), "辽宁工程技术大学北校区"+i+"舍"));
+        }
+        long writeEndTime = new Date().getTime();
+        System.out.println("写入结束，耗费时间："+((writeEndTime - writeStartTime)/1000.0) + "s");
 
+
+        long searchStartTime = new Date().getTime();
+        System.out.println("开始查询年龄>98的数据：");
+        List<Row> rows = table.getRows(row -> biggerThan(row.getColumn("age").getValue(), (byte)98));
+        long searchEndTime = new Date().getTime();
+        System.out.println("查询完成，共"+ rows.size()+"条数据，耗费时间："+((searchEndTime - searchStartTime)/1000.0)+"s");
+
+        db.getPageManager().flushAllPage();
     }
 
     static boolean biggerThan(Comparable a, Comparable b) {

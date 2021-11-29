@@ -9,4 +9,5 @@ public class Constants {
     public static final int PAGE_FILE_HEADER_BYTES = 60;
     public static final int PAGE_PAGE_HEADER_BYTES = 60;
     public static final String TABLE_EXT_NAME = ".yudoge";
+    public static final int MAX_PAGE_CACHED = 6553600; // 也就是256个页
 }
